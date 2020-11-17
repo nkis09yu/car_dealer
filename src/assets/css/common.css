@@ -1,0 +1,102 @@
+*{
+    font-size: 24px;
+}
+.flex{
+    display: flex;
+}
+.flex-aj{
+    align-items: center;
+    justify-content: space-between;
+}
+.border-eee{
+    height: 16px;
+    background-color: #eee;
+}
+.border-1{
+    border-bottom: 1px solid #ddd;
+}
+.pd-40{
+    padding: 40px;
+}
+.pd-0-40{
+    padding: 0 40px;
+}
+.border-radius-8{
+    border-radius: 8px;
+}
+.bold{
+    font-weight: 900;
+}
+.color-999{
+    color: #999;
+}
+.color-666{
+    color: #666;
+}
+.fontSize-24{
+    font-size: 24px;
+}
+.fontSize-26{
+    font-size: 26px;
+}
+.fontSize-28{
+    font-size: 28px;
+}
+.fontSize-30{
+    font-size: 30px;
+}
+.fontSize-32{
+    font-size: 32px;
+}
+.fontSize-40{
+    font-size: 40px;
+}
+.ellipsis{
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    word-break: break-all;
+    overflow: hidden;
+}
+
+/* 清除浮动 */
+.clearfix::after{
+    content: "";
+    display: block;
+    height: 0;
+    clear:both;
+    visibility: hidden;
+}
+
+.cm-btn{
+    line-height: 98px;
+    border-radius: 8px;
+    text-align: center;
+    font-size: 28px;
+}
+.bg-red{
+    background-color: #ff5c5c;
+}
+.bg-yellow{
+    background-color: #ffa114;
+}
+.color-yellow{
+    color: #ffa114;
+}
+.bg-blue{
+    background-color: #716dff;
+}
+.no-data{
+    overflow: hidden;
+}
+.no-data img{
+    display: block;
+        width: 200px;
+        height: 200px;
+        margin: 160px auto 0;
+    
+}
+.no-data p{
+    text-align: center;
+    margin-top: 30px;
+    font-size: 28px;
+}

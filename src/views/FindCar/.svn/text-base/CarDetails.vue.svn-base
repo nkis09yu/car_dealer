@@ -1,0 +1,613 @@
+<template>
+    <div class="car-details" v-if="showData">
+        <!-- 轮播图 -->
+        <div class="lunbo">
+            <van-swipe class="van-swipe" @change="onChange">
+                <van-swipe-item @click="swiperClick(index)" v-for="(item, index) in swiperList" :key="index">
+                    <van-image
+                        width="100%"
+                        height="100%"
+                        fit="cover"
+                        lazy-load
+                        :src="item"
+                    />
+                </van-swipe-item>
+                <template #indicator>
+                    <div class="custom-indicator">
+                    {{ current + 1 }}/{{swiperList.length}}
+                    </div>
+                </template>
+            </van-swipe>
+            <div class="car-date">{{carDate.slice(0,10)}}</div>
+        </div>
+        <div class="pd-40 jianjie" v-if="params['基本信息']">
+            <p class="bold fontSize-32 marginTop-24">{{params['基本信息']['具体车型']}}</p>
+            <p class="color-666 fontSize-24 marginTop-24">{{params['基本信息']['车辆归属地']}}/{{params['基本信息']['表显里程']}}万公里/{{params['基本信息']['初次上牌']}}/{{params['基本信息']['排放标准']}}</p>
+            <p class="marginTop-24 biaoqian" v-for="(tag, index) in params['车辆标签']['车辆标签'].split(',')" :key='index'>{{tag}}</p>
+            <div class="flex marginTop-24">
+                <p class="fontSize-32 bold">{{params['价格说明']['个人零售价']}}万</p>
+                <!-- <p class="color-666 fontSize-24">新手报价42.76万</p> -->
+            </div>
+        </div>
+        <div class="border-eee"></div>
+        <div class="pd-40 cs">
+            <div class="tab flex">
+                <div @click="carInfo" :class="tabInfo == 'carInfo' ? 'tab-item-active' : ''" class="tab-item">车辆信息</div>
+                <div @click="business" :class="tabInfo == 'business' ? 'tab-item-active' : ''" class="tab-item">商家信息</div>
+            </div>
+            <!-- 车辆信息 -->
+            <div v-show="tabInfo == 'carInfo'" class="car-info">
+                <div class="car-1 flex" v-if="params['基本信息']">
+                    <div class="flex">
+                        <p class="p1 color-999">看车城市：</p>
+                        <p class="p2">{{params['基本信息']['车辆所在地']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">上牌城市：</p>
+                        <p class="p2">{{params['基本信息']['车辆归属地']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">表显里程：</p>
+                        <p class="p2">{{params['基本信息']['表显里程']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">初次上牌：</p>
+                        <p class="p2">{{params['基本信息']['初次上牌']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">车辆颜色：</p>
+                        <p class="p2">{{params['基本信息']['车身颜色']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">变速箱：</p>
+                        <p class="p2">{{params['基本信息']['变速箱']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">排量：</p>
+                        <p class="p2">{{params['基本信息']['排量']}}T</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">排放标准：</p>
+                        <p class="p2">{{params['基本信息']['排放标准']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">车辆用途：</p>
+                        <p class="p2">{{params['基本信息']['使用性质']}}</p>
+                    </div>
+                    <div class="flex">
+                        <p class="p1 color-999">年检到期日：</p>
+                        <p class="p2">{{params['基本信息']['年检到期日']}}</p>
+                    </div>
+                </div>
+                <div class="border-1"></div>
+                <div class="car-2">
+                    <p>车辆描述：</p>
+                    <div v-if="params['车辆描述']">
+                        {{this.descArr}}{{this.descArr == '' ? '' : ','}}{{this.descCont}}
+                    </div>
+                </div>
+            </div>
+            <!-- 商家信息 -->
+            <div v-show="tabInfo == 'business'" class="business">
+                <div class="list">
+                    <div @click="shangjia(dealerInfo.openid)" class="item flex">
+                        <van-image
+                            fit="cover"
+                            :src='dealerInfo.files[0].file_url'
+                        />
+                        <div class="flex">
+                            <p class="p1 bold fontSize-32">{{dealerInfo.company}}</p>
+                            <p class="p2 color-666 ellipsis">在售{{dealerInfo.in_sale_count}}辆/已售{{dealerInfo.sold_out_count}}辆/{{dealerInfo.verify_type=='车商认证' ? '商家' : '个人'}}</p>
+                            <p class="p3 color-666 ellipsis">地址：{{dealerInfo.address}}</p>
+                        </div>
+                    </div>
+                </div>
+            </div>    
+        </div>
+        <div class="border-eee"></div>
+        <div class="pd-40 tc">
+            <div class="tab flex">
+                <div @click="tongcheng" :class="tcTxt == 'tongcheng' ? 'tab-item-active' : ''" class="tab-item">同款同城</div>
+                <div @click="chengjiao" :class="tcTxt == 'chengjiao' ? 'tab-item-active' : ''" class="tab-item">成交价格</div>
+            </div>
+            <!-- 同款同城 -->
+            <div v-show="tcTxt == 'tongcheng'" class="tongcheng">
+                <div class="list">
+                    <div class="item flex">
+                        <van-image
+                            fit="cover"
+                            lazy-load
+                            :src='require("../../assets/images/q5.png")'
+                        />
+                        <div class="flex">
+                            <p class="p1 bold fontSize-28">奥迪 Q5 2017款 40TFSI 技术型</p>
+                            <p class="p2 color-666 ellipsis">石家庄/4.5万公里/2017年</p>
+                            <p class="p3 flex">
+                                <em class="fontSize-28 bold">26.68万</em>
+                                <em class="color-666 fontSize-28">2020/04/19</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- 成交价格 -->
+            <div v-show="tcTxt == 'chengjiao'" class="chengjiao">
+                <div class="list">
+                    <div class="item flex">
+                        <van-image
+                            fit="cover"
+                            lazy-load
+                            :src='require("../../assets/images/q5.png")'
+                        />
+                        <div class="flex">
+                            <p class="p1 bold fontSize-28">奥迪 Q5 2017款 40TFSI 技术型</p>
+                            <p class="p2 color-666 ellipsis">石家庄/4.5万公里/2017年</p>
+                            <p class="p3 flex">
+                                <em class="fontSize-28 bold">26.68万</em>
+                                <em class="color-666 fontSize-28">2020/04/19</em>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="item flex">
+                        <van-image
+                            fit="cover"
+                            lazy-load
+                            :src='require("../../assets/images/q5.png")'
+                        />
+                        <div class="flex">
+                            <p class="p1 bold fontSize-28">奥迪 Q5 2017款 40TFSI 技术型</p>
+                            <p class="p2 color-666 ellipsis">石家庄/4.5万公里/2017年</p>
+                            <p class="p3 flex">
+                                <em class="fontSize-28 bold">26.68万</em>
+                                <em class="color-666 fontSize-28">2020/04/19</em>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="item flex">
+                        <van-image
+                            fit="cover"
+                            lazy-load
+                            :src='require("../../assets/images/q5.png")'
+                        />
+                        <div class="flex">
+                            <p class="p1 bold fontSize-28">奥迪 Q5 2017款 40TFSI 技术型</p>
+                            <p class="p2 color-666 ellipsis">石家庄/4.5万公里/2017年</p>
+                            <p class="p3 flex">
+                                <em class="fontSize-28 bold">26.68万</em>
+                                <em class="color-666 fontSize-28">2020/04/19</em>
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="bot-bar flex">
+            <div @click="collectClick" class="shoucang flex">
+                <img v-show="!collect" src="../../assets/images/findcar/shoucang.png" alt="">
+                <img v-show="collect" src="../../assets/images/findcar/shoucang-ac.png" alt="">
+                <p>{{!collect ? '收藏车辆' : '取消收藏'}}</p>
+            </div>
+            <div @click="contact" class="lianxi">联系商家</div>
+        </div>
+    </div>
+</template>
+
+<script>
+import Vue from 'vue'
+import {getOpenId} from '../../assets/js/utils.js';
+import { Image as VanImage } from 'vant';
+import { ImagePreview, Swipe, SwipeItem} from 'vant';
+Vue.use(Swipe);
+Vue.use(SwipeItem);
+export default {
+    data(){
+        return {
+            current: 0,
+            carName: '',
+            jj: '',
+            tabInfo: 'carInfo',
+            tcTxt: 'tongcheng',
+            phone: '',
+            collect: 0,
+            swiperList: [],
+            showData: false,
+            id: '',//车辆id
+            params: {},//车辆详细信息
+            dealerInfo: {},//商家信息
+            descCont: '',
+            descArr: [],
+            carDate: ''
+        }
+    },
+    mounted(){
+        getOpenId(this);
+        this.$toast.loading({
+            message: '加载中...',
+            forbidClick: true,
+            loadingType: 'spinner',
+            duration: 0
+        });
+        this.addHistory();
+        this.init();
+    },
+    methods: {
+        // 初始化
+        // 获取汽车详情
+        initCar(){
+            return this.$http.post('/api/car_dealer_index.php?s=/Home/Sale/SearchById',
+                this.qs.stringify({
+                    openid: localStorage.openid,
+                    vehicle_id: this.$route.query.id
+                })
+            )
+        },
+        // 获取店铺详情
+        initDealer(dealerOpenid){
+            return this.$http.post('/api/car_dealer_index.php?s=/Home/Sale/SearchDealerInfo',
+                this.qs.stringify({
+                    openid: localStorage.openid,
+                    dealer_openid: dealerOpenid
+                })
+            )
+        },
+        async init(){
+            try {
+                const carRes = await this.initCar();
+                if(carRes.data.code == 0){
+                    const dealerRes = await this.initDealer(carRes.data.data.openid);
+                    // 汽车详情
+                    this.params = carRes.data.data.params;
+                    this.carDate = carRes.data.data.updated_at;
+                    // 车辆描述
+                    let mDesc = carRes.data.data.params['车辆描述']['车辆描述'].split(',');
+                    this.descCont = mDesc.pop().substring(0);
+                    this.descArr = mDesc.toString();
+
+                    this.collect = Number(carRes.data.data.is_collect);
+                    this.id = carRes.data.data.id;
+                    if(carRes.data.data.images['外观照片']){
+                        for(let i=0;i<carRes.data.data.images['外观照片'].length;i++){
+                            this.swiperList.push(carRes.data.data.images['外观照片'][i].file_url);
+                        }
+                    }
+                    if(carRes.data.data.images['内饰照片']){
+                        for(let i=0;i<carRes.data.data.images['内饰照片'].length;i++){
+                            this.swiperList.push(carRes.data.data.images['内饰照片'][i].file_url);
+                        }
+                    }
+                    // 商家详情
+                    if(dealerRes.data.code == 0){
+                        this.dealerInfo = dealerRes.data.data;
+                    }else{
+                        this.$toast(dealerRes.data.msg);
+                    }
+
+                }else{
+                    this.$toast(carRes.data.msg);
+                }
+                this.$toast.clear();
+                this.showData = true;
+            } catch (err) {
+                console.log(err);
+            }
+        },
+
+        // 添加历史记录
+        addHistory(){
+            this.$http({
+                method: 'post',
+                url: '/api/car_dealer_index.php?s=/Home/User/recordHistory',
+                data: this.qs.stringify({
+                    openid: localStorage.openid,
+                    visit_id: this.$route.query.id
+                })
+            })
+        },
+
+        swiperClick(i){
+            ImagePreview({
+                closeOnPopstate: true,
+                images: this.swiperList,
+                startPosition: i
+            })
+        },
+        onChange(index){
+            this.current = index;
+        },
+        carInfo(){
+            this.tabInfo = 'carInfo'
+        },
+        business(){
+            this.tabInfo = 'business'
+        },
+        // 跳转到商家详情页面
+        shangjia(id){ 
+            this.$router.push('/merchantdetails?id='+id);
+        },
+        tongcheng(){
+            this.tcTxt = 'tongcheng'
+        },
+        chengjiao(){
+            this.tcTxt = 'chengjiao'
+        },
+        contact(){
+            window.location.href = `tel:${this.params['联系方式']['联系电话']}`;
+            return;
+            this.$dialog.confirm({
+                title: '联系商家',
+                message: '是否拨打该商家电话？',
+                cancelButtonText: '取消',
+                cancelButtonColor: '#333',
+                confirmButtonText: '拨打',
+                confirmButtonColor: '#716DFF'
+            })
+            .then(() => {
+                // on confirm
+                this.incrContactCount();
+                window.location.href = `tel:${this.dealerInfo.phone}`;
+            })
+            .catch(() => {
+                // on cancel
+            });
+        },
+        // 新增联系次数
+        incrContactCount(){
+            this.$http({
+                method: 'post',
+                url: '/api/car_dealer_index.php?s=/Home/Sale/IncrContactCount',
+                data: this.qs.stringify({
+                    vehicle_id: this.$route.query.id
+                })
+            })
+        },
+        // 收藏车辆
+        collectClick(){
+            if(this.collect){
+                this.collectCar(0);
+            }else{
+                this.collectCar(1);
+            }
+            this.collect = !this.collect;
+        },
+        // 收藏车辆
+        collectCar(isFollow){
+            this.$http({
+                method: 'post',
+                url: '/api/car_dealer_index.php?s=/Home/User/Collect',
+                data: this.qs.stringify({
+                    openid: localStorage.openid,
+                    collect_id: this.id,
+                    is_collect: isFollow
+                })
+            })
+            .then( res => {
+                if(isFollow){
+                    this.$toast('收藏成功');
+                }else{
+                    this.$toast('已取消收藏');
+                }
+            })
+            .catch( err => {
+                console.log(err);
+            })
+        }
+    },
+    destroyed(){
+        
+    }
+}
+</script>
+ 
+<style lang="scss" scoped>
+    .car-details{
+        padding-bottom: 100px;
+    }
+    .tab{
+        .tab-item{
+            font-size: 32px;
+            margin-right: 60px;
+            position: relative;
+        }
+        .tab-item-active{
+            font-weight: 900;
+            color: #716dff;
+        }
+        .tab-item-active::after{
+            content: '';
+            width: 64px;
+            height: 2PX;
+            background-color: #716dff;
+            position: absolute;
+            bottom: -16px;
+            left: 50%;
+            margin-left: -32px;
+        }
+    }
+    .lunbo{
+        position: relative;
+    }
+    .van-swipe{
+        height: 480px;
+        img{
+            width: 100%;
+            height: 100%;
+        }
+    }
+
+    .custom-indicator {
+        position: absolute;
+        right: 40px;
+        bottom: 30px;
+        padding: 0 20px;
+        height: 48px;
+        line-height: 48px;
+        font-size: 24px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+    }
+    .car-date{
+        position: absolute;
+        left: 40px;
+        bottom: 30px;
+        padding: 0 20px;
+        height: 48px;
+        line-height: 48px;
+        font-size: 24px;
+        background: rgba(0, 0, 0, 0.7);
+        color: #fff;
+        z-index: 99;
+    }
+    .marginTop-24{
+        margin-top: 24px;
+    }
+    .jianjie{
+        .biaoqian{
+            display: inline-block;
+            color: #fff;
+            background-color: #ffa114;
+            border-radius: 8px;
+            line-height: 32px;
+            padding: 0 10px;
+            margin-right: 20px;
+        }
+        div{
+            align-items: flex-end;
+        }
+    }
+    // 车辆信息 商家信息
+    .cs{
+        // 车辆信息
+        .car-info{
+            .car-1{
+                margin-top: 70px;
+                flex-wrap: wrap;
+                div{
+                    width: calc(50% - 10px);
+                    margin-bottom: 40px;
+                    p{
+                        font-size: 28px;
+                    }
+                }
+                div:nth-child(2n){
+                    margin-left: 20px;
+                }
+            }
+            .car-2{
+                margin-top: 40px;
+                font-size: 28px;
+                display: flex;
+                p{
+                    color: #666;
+                    line-height: 1.8;
+                }
+                div{
+                    line-height: 1.8;
+                    flex: 1;
+                }
+            }
+        }
+        // 商家信息
+        .business{
+            margin-top: 70px;
+            .list{
+                .item{
+                    .van-image{
+                        width: 240px;
+                        height: 180px;
+                        border-radius: 8px;
+                        overflow: hidden;
+                    }   
+                    div.flex{
+                        margin-left: 24px;
+                        flex: 1;
+                        flex-direction: column;
+                        justify-content: space-between;
+                        overflow: hidden;
+                        .p1{
+                            line-height: 1.5;
+                        }
+                        .p2,.p3{
+                            font-size: 24px;
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // 同城同款 成交价格
+    .tc{
+        // 同款同城
+        .tongcheng{
+            margin-top: 40px;
+            
+        }
+        .list{
+            .item{
+                border-bottom: 1PX solid #ddd;
+                padding: 30px 0;
+                .van-image{
+                    width: 240px;
+                    height: 180px;
+                    border-radius: 8px;
+                    overflow: hidden;
+                } 
+                div.flex{
+                    margin-left: 24px;
+                    flex: 1;
+                    flex-direction: column;
+                    justify-content: space-between;
+                    overflow: hidden;
+                    .p1{
+                        line-height: 1.5;
+                    }
+                    .p2{
+                        font-size: 24px;
+                    }
+                    .p3{
+                        justify-content: space-between;
+                        align-items: flex-end;
+                    }
+                }
+            }
+        }
+        // 成交价格
+        .chengjiao{
+            margin-top: 40px;
+            
+        }
+    }
+    .bot-bar{
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: 98px;
+        border-top: 1PX solid #eee;
+        padding: 0 40px;
+        background-color: #fff;
+        z-index: 1000;
+        justify-content: space-between;
+        align-items: center;
+        .shoucang{
+            align-items: center;
+            img{
+                width: 40px;
+                height: 40px;
+            }
+            p{
+                font-size: 28px;
+                margin-left: 16px;
+            }
+        }
+        .lianxi{
+            font-size: 28px;
+            height: 80px;
+            width: 320px;
+            color: #fff;
+            background-color: #716dff;
+            border-radius: 8px;
+            text-align: center;
+            line-height: 80px;
+        }
+    }
+</style>

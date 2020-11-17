@@ -1,0 +1,77 @@
+<template>
+    <div class="swhz">
+        <img src="../../assets/images/my/csrz.png" alt="">
+        <div @click="renzheng" class="bold">立即免费认证</div>
+    </div>
+</template>
+
+<script>
+import {getOpenId} from '../../assets/js/utils.js'
+export default {
+    data(){
+        return {
+            verifyStatus: '',
+        }
+    },
+    created(){
+        getOpenId(this);
+        init();
+    },
+    methods: {
+        init(){
+            this.$http({
+                method: 'post',
+                url: '/api/car_dealer_index.php?s=/Home/User/Verification',
+                data: this.qs.stringify({
+                    openid: sessionStorage.openid
+                })
+            })
+            .then( res => {
+                if(res.data.code == 0){
+                    if ('id' in res.data.data) {
+                        this.$router.push('/my');
+                    }
+                }
+            })
+        },
+        renzheng(){
+            if(this.verifyStatus == '未认证'){
+                this.$router.push('/cardealer');
+            }else if(this.verifyStatus == '认证中'){
+                this.$dialog.alert({
+                    title: '认证提示',
+                    message: '认证中，请保持电话通畅',
+                    confirmButtonText: '我知道了',
+                    confirmButtonColor: '#716dff'
+                });
+            }else if(this.verifyStatus == '认证成功'){
+                this.$router.push('/my');
+            }
+            
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+    .swhz{
+        height: 100%;
+        background-color: #5526e9 !important;
+        position: relative;
+        img{
+            width: 100%;
+        }
+        div{
+            position: absolute;
+            left: 134px;
+            right: 134px;
+            bottom: 80px;
+            background-color: #fff;
+            border-radius: 16px;
+            color: #726dff;
+            font-size: 32px;
+            text-align: center;
+            line-height: 112px;
+        }
+    }
+</style>

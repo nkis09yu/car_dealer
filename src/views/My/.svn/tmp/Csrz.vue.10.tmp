@@ -1,0 +1,105 @@
+<template>
+    <div class="swhz">
+        <img src="../../assets/images/my/csrz.png" alt="">
+        <div @click="renzheng" class="bold">立即免费认证</div>
+    </div>
+</template>
+
+<script>
+import {getQueryString} from '../../assets/js/utils.js';
+export default {
+    data(){
+        return {
+            verifyStatus: '',
+        }
+    },
+    mounted(){
+        if(!sessionStorage.openid) {
+            const that = this;
+            var $appId = 'wx4335e535e7e39193'
+            var $redirectUri = encodeURIComponent(window.location.href);
+            var code_front = getQueryString('code')
+            if(!code_front) {
+                window.location.href = 'https://open.weixin.qq.com/connect/oauth2/authorize?appid='+$appId+'&redirect_uri='+$redirectUri+'&response_type=code&scope=snsapi_base&state=1&connect_redirect=1#wechat_redirect'
+            } else {
+                that.$http({
+                    method: 'post',
+                    url: '/api/car_dealer_index.php?s=/Home/User/getopenid',
+                    async: false,
+                    data: that.qs.stringify({
+                        code_front: code_front
+                    })  
+                })  
+                .then(function(res){
+                    if(res.data.code == 0) {
+                        sessionStorage.openid = res.data.data.openid;
+                        that.init();
+                    } else {
+                        alert(res.data.msg);
+                    }
+                })  
+            }  
+        }else{
+            this.init();
+        }
+    },
+    methods: {
+        init(){
+            this.$http({
+                method: 'post',
+                url: '/api/car_dealer_index.php?s=/Home/User/Verification',
+                data: this.qs.stringify({
+                    openid: sessionStorage.openid
+                })
+            })
+            .then( res => {
+                if(res.data.data.length == 0){
+                    this.verifyStatus = '未认证';
+                }else if(res.data.data.verify_status == "0"){
+                    this.verifyStatus = '认证中';
+                }else if(res.data.data.verify_status == "1"){
+                    this.verifyStatus = '认证成功';
+                }
+            })
+           
+        },
+        renzheng(){
+            if(this.verifyStatus == '未认证'){
+                window.location.href = 'http://yingyanchaxun.com/car_dealer/dist/index.html#/cardealer';
+            }else if(this.verifyStatus == '认证中'){
+                this.$dialog.alert({
+                    title: '认证提示',
+                    message: '认证中，请保持电话通畅',
+                    confirmButtonText: '我知道了',
+                });
+            }else if(this.verifyStatus == '认证成功'){
+                window.location.href = 'http://yingyanchaxun.com/car_dealer/dist/index.html#/my';
+            }
+            
+        }
+    }
+}
+</script>
+
+<style lang="scss" scoped>
+    .swhz{
+        height: 100%;
+        background-color: #5526e9 !important;
+        position: relative;
+        img{
+            width: 100%;
+        }
+        div{
+            position: absolute;
+            left: 134px;
+            right: 134px;
+            bottom: 80px;
+            background-color: #fff;
+            border-radius: 16px;
+            color: #726dff;
+            font-size: 32px;
+            text-align: center;
+            line-height: 112px;
+        }
+    }
+</style>
